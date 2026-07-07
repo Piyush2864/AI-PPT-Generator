@@ -11,6 +11,7 @@ import path from 'path';
 export const createPresentation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.userId;
   const presentation = await presentationService.create(userId, req.body);
+  // 202 Accepted: the request is acknowledged but processing happens asynchronously.
   sendSuccess(res, 202, 'Presentation generation job created', {
     id: presentation.id,
     jobId: presentation.jobId,
@@ -32,7 +33,6 @@ export const listPresentations = asyncHandler(async (req: AuthenticatedRequest, 
 export const getPresentation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.userId;
   const presentation = await presentationService.getById(req.params.id, userId);
-  console.log("nbksksdks ", presentation)
   sendSuccess(res, 200, 'Presentation fetched successfully', presentation);
 });
 
@@ -46,6 +46,12 @@ export const getJobLogs = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const userId = req.user!.userId;
   const logs = await presentationService.getJobLogs(req.params.id, userId);
   sendSuccess(res, 200, 'Job logs fetched successfully', logs);
+});
+
+export const regeneratePresentation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user!.userId;
+  const result = await presentationService.regenerate(req.params.id, userId);
+  sendSuccess(res, 202, 'Presentation regeneration started', result);
 });
 
 export const exportPresentation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {

@@ -8,7 +8,9 @@ interface ListParams {
   status?: PresentationStatus;
 }
 
-
+// Repository layer for Presentation + nested Slide/JobLog records.
+// All raw Prisma queries related to presentations live here, isolated from
+// service-level business logic (status transitions, job orchestration, etc.).
 export class PresentationRepository {
   create(data: Prisma.PresentationCreateInput) {
     return prisma.presentation.create({ data });
@@ -56,7 +58,7 @@ export class PresentationRepository {
     return prisma.presentation.update({ where: { id }, data: { jobId } });
   }
 
-  setPdfUrl(id: string, pdfUrl: string) {
+  setPdfUrl(id: string, pdfUrl: string | null) {
     return prisma.presentation.update({ where: { id }, data: { pdfUrl } });
   }
 
