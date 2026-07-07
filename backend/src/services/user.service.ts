@@ -30,7 +30,7 @@ export class UserService {
     const newHash = await bcrypt.hash(input.newPassword, 10);
     await userRepository.updateById(userId, { passwordHash: newHash });
 
-    // Revoke all refresh tokens so all other sessions are logged out after a password change.
+
     await refreshTokenRepository.revokeAllForUser(userId);
 
     logger.info({ userId }, 'User password changed - all sessions revoked');
@@ -43,7 +43,7 @@ export class UserService {
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) throw AppError.badRequest('Incorrect password');
 
-    // Cascade deletes all presentations, slides, job logs, refresh tokens (defined in schema)
+    
     await userRepository.deleteById(userId);
     logger.info({ userId }, 'User account deleted');
   }

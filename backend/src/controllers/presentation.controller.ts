@@ -11,7 +11,6 @@ import path from 'path';
 export const createPresentation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.userId;
   const presentation = await presentationService.create(userId, req.body);
-  // 202 Accepted: the request is acknowledged but processing happens asynchronously.
   sendSuccess(res, 202, 'Presentation generation job created', {
     id: presentation.id,
     jobId: presentation.jobId,
@@ -46,6 +45,17 @@ export const getJobLogs = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const userId = req.user!.userId;
   const logs = await presentationService.getJobLogs(req.params.id, userId);
   sendSuccess(res, 200, 'Job logs fetched successfully', logs);
+});
+
+export const duplicatePresentation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user!.userId;
+  const result = await presentationService.duplicate(req.params.id, userId);
+  sendSuccess(res, 202, 'Presentation duplicated successfully', {
+    id: result.id,
+    jobId: result.jobId,
+    topic: result.topic,
+    status: result.status,
+  });
 });
 
 export const regeneratePresentation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {

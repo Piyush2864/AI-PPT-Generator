@@ -11,9 +11,6 @@ import fs from 'fs';
 const logger = createChildLogger('presentation-service');
 
 export class PresentationService {
-  // Creates the presentation record as PENDING and enqueues an async job.
-  // Returns immediately with the job id - the actual AI generation happens
-  // out-of-band in the worker process.
   async create(userId: string, input: CreatePresentationInput) {
     const presentation = await presentationRepository.create({
       topic: input.topic,
@@ -42,7 +39,7 @@ export class PresentationService {
         style: input.style,
         customInstructions: input.customInstructions,
       },
-      { jobId: presentation.id }, // 1:1 mapping between presentation and job for easy lookup
+      { jobId: presentation.id }, 
     );
 
     await presentationRepository.attachJobId(presentation.id, job.id as string);
@@ -71,7 +68,7 @@ export class PresentationService {
     const presentation = await presentationRepository.findByIdAndUser(id, userId);
     if (!presentation) throw AppError.notFound('Presentation not found');
 
-    // Clean up generated PDF file from disk if it exists, to avoid orphaned files.
+    
     if (presentation.pdfUrl) {
       const absolutePath = `${process.cwd()}${presentation.pdfUrl}`;
       fs.promises.unlink(absolutePath).catch(() => {
@@ -84,11 +81,62 @@ export class PresentationService {
     logger.info({ presentationId: id, userId }, 'Presentation deleted');
   }
 
+  async duplicate(id: string, userId: string) {
+    const original = await presentationRepository.findByIdAndUser(id, userId);
+    if (!original) throw AppError.notFound('Presentation not found');
+
+    
+    const newPresentation = await presentationRepository.create({
+      topic: `${original.topic} (Copy)`,
+      audience: original.audience,
+      language: original.language,
+      slideCount: original.slideCount,
+      theme: original.theme,
+      tone: original.tone,
+      style: original.style,
+      customInstructions: original.customInstructions,
+      status: PresentationStatus.PENDING,
+      user: { connect: { id: userId } },
+    });
+
+    
+    const job = await presentationQueue.add(
+      'generate-presentation',
+      {
+        presentationId: newPresentation.id,
+        userId,
+        topic: newPresentation.topic,
+        audience: newPresentation.audience,
+        language: newPresentation.language,
+        slideCount: newPresentation.slideCount,
+        theme: newPresentation.theme,
+        tone: newPresentation.tone,
+        style: newPresentation.style,
+        customInstructions: newPresentation.customInstructions ?? undefined,
+      },
+      { jobId: newPresentation.id },
+    );
+
+    await presentationRepository.attachJobId(newPresentation.id, job.id as string);
+    await presentationRepository.addJobLog({
+      presentationId: newPresentation.id,
+      eventType: JOB_EVENT_TYPE.CREATED,
+      message: `Duplicate job created from presentation "${original.topic}"`,
+    });
+
+    logger.info(
+      { originalId: id, newPresentationId: newPresentation.id, jobId: job.id, userId },
+      'Presentation duplicated',
+    );
+
+    return { ...newPresentation, jobId: job.id };
+  }
+
   async regenerate(id: string, userId: string) {
     const presentation = await presentationRepository.findByIdAndUser(id, userId);
     if (!presentation) throw AppError.notFound('Presentation not found');
 
-    // Only allow regeneration when previous attempt is fully settled (not mid-flight).
+    
     if (
       presentation.status === PresentationStatus.PENDING ||
       presentation.status === PresentationStatus.PROCESSING
@@ -96,7 +144,7 @@ export class PresentationService {
       throw AppError.badRequest('Presentation is already being generated. Please wait for it to finish.');
     }
 
-    // Delete old PDF from disk if it exists.
+    
     if (presentation.pdfUrl) {
       const absolutePath = `${process.cwd()}${presentation.pdfUrl}`;
       fs.promises.unlink(absolutePath).catch(() => {
@@ -104,10 +152,10 @@ export class PresentationService {
       });
     }
 
-    // Wipe all previous slides so fresh ones don't collide on the unique (presentationId, order) index.
+    
     await slideRepository.deleteAllByPresentation(id);
 
-    // Reset all generation-related fields back to initial state.
+    
     await presentationRepository.updateStatus(id, PresentationStatus.PENDING, {
       failureReason: null,
       startedAt: undefined,
@@ -115,8 +163,7 @@ export class PresentationService {
     });
     await presentationRepository.setPdfUrl(id, null as unknown as string);
 
-    // Enqueue a brand new job. Use a unique jobId (timestamp suffix) because BullMQ
-    // rejects a job whose id already exists in the queue/completed set.
+    
     const newJobId = `${id}-${Date.now()}`;
     const job = await presentationQueue.add(
       'generate-presentation',
