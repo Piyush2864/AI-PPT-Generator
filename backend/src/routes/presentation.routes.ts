@@ -16,6 +16,8 @@ import {
   exportPresentation,
   downloadPdf,
 } from '../controllers/presentation.controller';
+import { reorderSlidesSchema, updateSlideSchema } from 'validators/slide.validator';
+import { reorderSlides, updateSlide } from 'controllers/slide.controller';
 
 const router = Router();
 
@@ -28,5 +30,7 @@ router.delete('/:id', validate(presentationIdParamSchema), deletePresentation);
 router.get('/:id/logs', validate(presentationIdParamSchema), getJobLogs);
 router.post('/:id/export', validate(presentationIdParamSchema), exportPresentation);
 router.get('/:id/download', validate(presentationIdParamSchema), downloadPdf);
+router.patch('/:id/slides/reorder', validate(reorderSlidesSchema), reorderSlides);
+router.patch('/:id/slides/:slideId', validate(updateSlideSchema), updateSlide);
 
 export default router;
