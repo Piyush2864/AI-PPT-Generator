@@ -3,10 +3,13 @@ import { Link } from 'react-router-dom';
 import { Plus, Search, LayoutGrid, Loader2 } from 'lucide-react';
 import { usePresentationList, useDeletePresentation } from '../hooks/usePresentations';
 import { PresentationCard } from '../components/presentation/PresentationCard';
+import { Pagination } from '../components/ui/Pagination';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import type { PresentationStatus } from '../types/presentation.types';
 import { cn } from '../lib/utils';
+
+const ITEMS_PER_PAGE = 9;
 
 const filters: { label: string; value: PresentationStatus | 'ALL' }[] = [
   { label: 'All', value: 'ALL' },
@@ -19,35 +22,51 @@ const filters: { label: string; value: PresentationStatus | 'ALL' }[] = [
 export function DashboardPage() {
   const [activeFilter, setActiveFilter] = useState<PresentationStatus | 'ALL'>('ALL');
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const { data, isLoading } = usePresentationList({
-    limit: 50,
+  const { data, isLoading, isFetching } = usePresentationList({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
     status: activeFilter === 'ALL' ? undefined : activeFilter,
   });
+
   const deleteMutation = useDeletePresentation();
 
   const presentations = data?.items ?? [];
+  const totalPages = data?.totalPages ?? 1;
+  const totalItems = data?.total ?? 0;
 
   const filtered = useMemo(
     () => presentations.filter((p) => p.topic.toLowerCase().includes(search.toLowerCase())),
     [presentations, search],
   );
 
-  
   const stats = useMemo(
     () => ({
-      total: presentations.length,
+      total: totalItems,
       completed: presentations.filter((p) => p.status === 'COMPLETED').length,
       processing: presentations.filter((p) => p.status === 'PROCESSING' || p.status === 'PENDING').length,
       failed: presentations.filter((p) => p.status === 'FAILED').length,
     }),
-    [presentations],
+    [presentations, totalItems],
   );
 
   const handleDelete = (id: string) => {
     if (confirm('Delete this presentation? This cannot be undone.')) {
-      deleteMutation.mutate(id);
+      deleteMutation.mutate(id, {
+        onSuccess: () => {
+          if (filtered.length === 1 && currentPage > 1) {
+            setCurrentPage((p) => p - 1);
+          }
+        },
+      });
     }
+  };
+
+  const handleFilterChange = (value: PresentationStatus | 'ALL') => {
+    setActiveFilter(value);
+    setCurrentPage(1);
+    setSearch('');
   };
 
   return (
@@ -88,7 +107,7 @@ export function DashboardPage() {
           {filters.map((f) => (
             <button
               key={f.value}
-              onClick={() => setActiveFilter(f.value)}
+              onClick={() => handleFilterChange(f.value)}
               className={cn(
                 'rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors',
                 activeFilter === f.value
@@ -104,7 +123,7 @@ export function DashboardPage() {
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search presentations…"
+            placeholder="Search on this page…"
             className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -118,11 +137,23 @@ export function DashboardPage() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : filtered.length > 0 ? (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((p) => (
-            <PresentationCard key={p.id} presentation={p} onDelete={handleDelete} />
-          ))}
-        </div>
+        <>
+          <div className={cn('mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3', isFetching && 'opacity-60 transition-opacity')}>
+            {filtered.map((p) => (
+              <PresentationCard key={p.id} presentation={p} onDelete={handleDelete} />
+            ))}
+          </div>
+
+          <div className="mt-8">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        </>
       ) : (
         <div className="mt-16 flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">

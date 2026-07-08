@@ -14,6 +14,7 @@ export function usePresentationList(params: ListPresentationsParams = {}) {
   return useQuery({
     queryKey: presentationKeys.list(params),
     queryFn: () => presentationApi.list(params),
+    placeholderData: (prev) => prev, 
   });
 }
 
@@ -78,7 +79,6 @@ export function useExportPresentation() {
     },
   });
 }
-
 
 function extractErrorMessage(err: unknown): string {
   const anyErr = err as { response?: { data?: { message?: string } } };
