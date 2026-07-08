@@ -4,6 +4,7 @@ import { SignupPage } from '../pages/SignupPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { CreatePresentationPage } from '../pages/CreatePresentationPage';
 import { PresentationDetailPage } from '../pages/PresentationDetailPage';
+import { ProfilePage } from '../pages/ProfilePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { AppLayout } from '../components/layout/AppLayout';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -21,6 +22,7 @@ export function AppRouter() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/create" element={<CreatePresentationPage />} />
             <Route path="/presentations/:id" element={<PresentationDetailPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
         </Route>
 
