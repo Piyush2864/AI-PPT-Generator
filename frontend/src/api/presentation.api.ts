@@ -6,40 +6,55 @@ import type { CreatePresentationPayload, ListPresentationsParams } from '../type
 export const presentationApi = {
   create: async (payload: CreatePresentationPayload) => {
     const { data } = await axiosClient.post<ApiResponse<{ id: string; jobId: string; status: string }>>(
-      'presentations',
+      '/presentations',
       payload,
     );
     return data.data;
   },
 
   list: async (params: ListPresentationsParams = {}) => {
-    const { data } = await axiosClient.get<ApiResponse<PaginatedResponse<Presentation>>>('presentations', {
+    const { data } = await axiosClient.get<ApiResponse<PaginatedResponse<Presentation>>>('/presentations', {
       params,
     });
     return data.data;
   },
 
   getById: async (id: string) => {
-    const { data } = await axiosClient.get<ApiResponse<Presentation>>(`presentations/${id}`);
+    const { data } = await axiosClient.get<ApiResponse<Presentation>>(`/presentations/${id}`);
     return data.data;
   },
 
   delete: async (id: string) => {
-    await axiosClient.delete(`presentations/${id}`);
+    await axiosClient.delete(`/presentations/${id}`);
   },
 
   getJobLogs: async (id: string) => {
-    const { data } = await axiosClient.get<ApiResponse<JobLog[]>>(`presentations/${id}/logs`);
+    const { data } = await axiosClient.get<ApiResponse<JobLog[]>>(`/presentations/${id}/logs`);
     return data.data;
   },
 
   exportToPdf: async (id: string) => {
-    const { data } = await axiosClient.post<ApiResponse<{ pdfUrl: string }>>(`presentations/${id}/export`);
+    const { data } = await axiosClient.post<ApiResponse<{ pdfUrl: string }>>(`/presentations/${id}/export`);
     return data.data;
   },
 
+  regenerate: async (id: string) => {
+    const { data } = await axiosClient.post<ApiResponse<{ id: string; jobId: string; status: string }>>(
+      `/presentations/${id}/regenerate`,
+    );
+    return data.data;
+  },
+
+  duplicate: async (id: string) => {
+    const { data } = await axiosClient.post<ApiResponse<{ id: string; jobId: string; topic: string; status: string }>>(
+      `/presentations/${id}/duplicate`,
+    );
+    return data.data;
+  },
+
+
   downloadPdf: async (id: string, filename: string) => {
-    const response = await axiosClient.get(`presentations/${id}/download`, { responseType: 'blob' });
+    const response = await axiosClient.get(`/presentations/${id}/download`, { responseType: 'blob' });
     const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = blobUrl;
