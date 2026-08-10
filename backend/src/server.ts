@@ -15,7 +15,7 @@ initSocketServer(httpServer);
 
 const updateSubscriber = subscribeToPresentationUpdates();
 
-httpServer.listen(env.PORT, () => {
+httpServer.listen(env.PORT, '0.0.0.0', () => {
   logger.info(`🚀 API server listening on port ${env.PORT} [${env.NODE_ENV}]`);
 });
 
