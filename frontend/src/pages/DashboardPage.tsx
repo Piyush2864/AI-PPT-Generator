@@ -86,7 +86,7 @@ export function DashboardPage() {
         </Link>
       </div>
 
-      {/* Stats row */}
+      
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: 'Total', value: stats.total, accent: 'text-foreground' },
@@ -101,7 +101,7 @@ export function DashboardPage() {
         ))}
       </div>
 
-      {/* Filters + search */}
+      
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-1.5">
           {filters.map((f) => (
@@ -131,7 +131,7 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Grid */}
+      
       {isLoading ? (
         <div className="mt-16 flex justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

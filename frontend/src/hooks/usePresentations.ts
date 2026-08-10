@@ -69,8 +69,8 @@ export function useDeletePresentation() {
 export function useExportPresentation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: presentationApi.exportToPdf,
-    onSuccess: (_data, id) => {
+    mutationFn: ({ id, filename }: { id: string; filename: string }) => presentationApi.downloadPdf(id, filename),
+    onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: presentationKeys.detail(id) });
       toast.success('PDF export ready');
     },

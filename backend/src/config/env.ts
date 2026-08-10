@@ -22,6 +22,9 @@ const envSchema = z.object({
   AI_PROVIDER_API_KEY: z.string().optional().default(''),
   AI_PROVIDER_MODEL: z.string().optional().default('gemini-1.5-flash'),
 
+
+  UNSPLASH_ACCESS_KEY: z.string().optional().default(''),
+
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
   RATE_LIMIT_MAX: z.coerce.number().default(20),
 
@@ -34,7 +37,7 @@ const envSchema = z.object({
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error('❌ Invalid environment variables:', parsed.error.flatten().fieldErrors);
+  console.error(' Invalid environment variables:', parsed.error.flatten().fieldErrors);
   process.exit(1);
 }
 

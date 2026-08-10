@@ -14,10 +14,9 @@ import {
   getPresentation,
   deletePresentation,
   getJobLogs,
-  exportPresentation,
-  downloadPdf,
   regeneratePresentation,
   duplicatePresentation,
+  downloadPdf,
 } from '../controllers/presentation.controller';
 import { updateSlide, reorderSlides } from '../controllers/slide.controller';
 
@@ -25,17 +24,16 @@ const router = Router();
 
 router.use(authenticate);
 
-
 router.post('/', generationRateLimiter, validate(createPresentationSchema), createPresentation);
 router.get('/', validate(listPresentationsQuerySchema), listPresentations);
 router.get('/:id', validate(presentationIdParamSchema), getPresentation);
 router.delete('/:id', validate(presentationIdParamSchema), deletePresentation);
 
-
 router.get('/:id/logs', validate(presentationIdParamSchema), getJobLogs);
 router.post('/:id/regenerate', validate(presentationIdParamSchema), regeneratePresentation);
 router.post('/:id/duplicate', validate(presentationIdParamSchema), duplicatePresentation);
-router.post('/:id/export', validate(presentationIdParamSchema), exportPresentation);
+
+
 router.get('/:id/download', validate(presentationIdParamSchema), downloadPdf);
 
 

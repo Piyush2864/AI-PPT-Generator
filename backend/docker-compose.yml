@@ -6,9 +6,9 @@ services:
     container_name: ai-ppt-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: ai_ppt_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-ai_ppt_db}
     ports:
       - '5432:5432'
     volumes:
@@ -42,25 +42,15 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
-      PORT: 4000
-      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ai_ppt_db?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-ai_ppt_db}?schema=public
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change_this_access_secret}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_this_refresh_secret}
-      JWT_ACCESS_EXPIRES_IN: 15m
-      JWT_REFRESH_EXPIRES_IN: 7d
-      AI_PROVIDER_API_KEY: ${AI_PROVIDER_API_KEY:-}
-      AI_PROVIDER_MODEL: gemini-1.5-flash
-      JOB_MAX_ATTEMPTS: 3
-      JOB_BACKOFF_DELAY_MS: 2000
     ports:
       - '4000:4000'
-    volumes:
-      - exports_data:/app/storage/exports
 
   worker:
     build:
@@ -73,20 +63,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ai_ppt_db?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-ai_ppt_db}?schema=public
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change_this_access_secret}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_this_refresh_secret}
-      AI_PROVIDER_API_KEY: ${AI_PROVIDER_API_KEY:-}
-      AI_PROVIDER_MODEL: gemini-1.5-flash
-      JOB_MAX_ATTEMPTS: 3
-      JOB_BACKOFF_DELAY_MS: 2000
-    volumes:
-      - exports_data:/app/storage/exports
 
 volumes:
-  postgres_data:
-  exports_data:
+  postgres_data:    

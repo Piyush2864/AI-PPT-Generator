@@ -6,20 +6,12 @@ import { Label } from '../ui/Label';
 import { Textarea } from '../ui/Textarea';
 import { cn } from '../../lib/utils';
 
-const themeBg: Record<string, string> = {
-  MINIMAL: 'bg-white text-zinc-900',
-  CORPORATE: 'bg-slate-50 text-slate-900',
-  CREATIVE: 'bg-orange-50 text-zinc-900',
-  DARK: 'bg-zinc-900 text-zinc-50',
-  ACADEMIC: 'bg-white text-zinc-900',
-};
-
-const accentBar: Record<string, string> = {
-  MINIMAL: 'bg-slate-400',
-  CORPORATE: 'bg-blue-600',
-  CREATIVE: 'bg-orange-500',
-  DARK: 'bg-cyan-400',
-  ACADEMIC: 'bg-emerald-600',
+const themeConfig: Record<string, { bg: string; text: string; accent: string; muted: string }> = {
+  MINIMAL:   { bg: 'bg-white',      text: 'text-zinc-900',  accent: 'bg-slate-400',   muted: 'text-zinc-400' },
+  CORPORATE: { bg: 'bg-slate-50',   text: 'text-slate-900', accent: 'bg-blue-600',    muted: 'text-slate-400' },
+  CREATIVE:  { bg: 'bg-orange-50',  text: 'text-zinc-900',  accent: 'bg-orange-500',  muted: 'text-orange-400' },
+  DARK:      { bg: 'bg-zinc-900',   text: 'text-zinc-50',   accent: 'bg-cyan-400',    muted: 'text-zinc-500' },
+  ACADEMIC:  { bg: 'bg-white',      text: 'text-zinc-900',  accent: 'bg-emerald-600', muted: 'text-zinc-400' },
 };
 
 interface SlideEditorCardProps {
@@ -46,6 +38,9 @@ export function SlideEditorCard({
   const [content, setContent] = useState(slide.content);
   const [notes, setNotes] = useState(slide.notes ?? '');
 
+  const cfg = themeConfig[theme] ?? themeConfig.MINIMAL;
+  const hasImage = !!slide.imageUrl;
+
   const handleSave = () => {
     if (!title.trim() || !content.trim()) return;
     onSave(slide.id, { title: title.trim(), content: content.trim(), notes: notes.trim() });
@@ -60,47 +55,85 @@ export function SlideEditorCard({
   };
 
   return (
-    <div className={cn('rounded-xl border border-border overflow-hidden', isEditing && 'ring-2 ring-primary/30')}>
-      {/* Slide preview header */}
-      <div className={cn('relative aspect-video p-5', themeBg[theme])}>
-        <div className={cn('absolute left-0 top-0 h-1.5 w-full', accentBar[theme])} />
-        <p className="text-[10px] font-medium uppercase tracking-wider opacity-50">
-          Slide {slide.order} of {totalSlides}
-        </p>
+    <div
+      className={cn(
+        'rounded-xl border border-border overflow-hidden shadow-card',
+        isEditing && 'ring-2 ring-primary/30',
+      )}
+    >
+      <div className={cn('relative', cfg.bg)}>
+        <div className={cn('h-1.5 w-full', cfg.accent)} />
 
-        {!isEditing ? (
-          <>
-            <h3 className="mt-1 text-base font-bold leading-snug line-clamp-2">{slide.title}</h3>
-            <div className="mt-2 space-y-1 text-xs leading-relaxed opacity-80">
-              {slide.content.split('\n').map((line, i) => (
+        {hasImage && !isEditing ? (
+          
+          <div className="flex min-h-[150px]">
+            <div className="relative w-2/5 shrink-0 overflow-hidden">
+              <img
+                src={slide.imageUrl!}
+                alt={slide.title}
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div className={cn('flex-1 p-4', cfg.text)}>
+              <p className={cn('text-[10px] font-medium uppercase tracking-wider', cfg.muted)}>
+                Slide {slide.order} of {totalSlides}
+              </p>
+              <h3 className="mt-1 text-sm font-bold leading-snug line-clamp-2">{slide.title}</h3>
+              <div className="mt-2 space-y-0.5 text-xs leading-relaxed opacity-80">
+                {slide.content.split('\n').slice(0, 4).map((line, i) => (
+                  <p key={i} className="line-clamp-1">{line}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : !isEditing ? (
+          
+          <div className={cn('p-4 min-h-[120px]', cfg.text)}>
+            <p className={cn('text-[10px] font-medium uppercase tracking-wider', cfg.muted)}>
+              Slide {slide.order} of {totalSlides}
+            </p>
+            <h3 className="mt-1 text-sm font-bold leading-snug line-clamp-2">{slide.title}</h3>
+            <div className="mt-2 space-y-0.5 text-xs leading-relaxed opacity-80">
+              {slide.content.split('\n').slice(0, 4).map((line, i) => (
                 <p key={i} className="line-clamp-2">{line}</p>
               ))}
             </div>
-          </>
+          </div>
         ) : (
           
-          <div className="mt-1 space-y-2">
+          <div className={cn('p-4 space-y-2.5', cfg.text)}>
+            <p className={cn('text-[10px] font-medium uppercase tracking-wider', cfg.muted)}>
+              Editing Slide {slide.order}
+            </p>
             <input
-              className="w-full rounded bg-white/80 px-2 py-1 text-sm font-bold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full rounded-md border border-border bg-white/90 px-2.5 py-1.5 text-sm font-bold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Slide title"
               maxLength={300}
             />
             <textarea
-              className="w-full rounded bg-white/80 px-2 py-1 text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-              rows={4}
+              className="w-full rounded-md border border-border bg-white/90 px-2.5 py-1.5 text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+              rows={5}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Slide content (use new lines for bullet points)"
               maxLength={5000}
             />
+            {hasImage && (
+              <img
+                src={slide.imageUrl!}
+                alt="Current image"
+                className="h-16 w-full object-cover rounded-md opacity-50"
+              />
+            )}
           </div>
         )}
       </div>
 
       
-      <div className="border-t border-border bg-card px-4 py-3">
+      <div className="border-t border-border bg-card px-4 py-2.5">
         {isEditing ? (
           <div className="space-y-3">
             <div>
@@ -109,7 +142,7 @@ export function SlideEditorCard({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Add speaker notes…"
-                className="mt-1 min-h-[60px] text-xs"
+                className="mt-1 min-h-[56px] text-xs"
                 maxLength={2000}
               />
             </div>
@@ -131,49 +164,31 @@ export function SlideEditorCard({
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-between gap-2">
-            
-            <p className="flex-1 truncate text-xs text-muted-foreground">
-              {slide.notes ? (
-                <>
-                  <span className="font-medium text-foreground">Note: </span>
-                  {slide.notes}
-                </>
-              ) : (
-                <span className="italic">No speaker notes</span>
-              )}
-            </p>
-
-           
-            <div className="flex shrink-0 items-center gap-1">
-              
-              <button
-                onClick={onMoveUp}
-                disabled={slide.order === 1}
-                title="Move up"
-                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronUp className="h-4 w-4" />
-              </button>
-              <button
-                onClick={onMoveDown}
-                disabled={slide.order === totalSlides}
-                title="Move down"
-                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronDown className="h-4 w-4" />
-              </button>
-
-             
-              <button
-                onClick={() => setIsEditing(true)}
-                title="Edit slide"
-                className="flex h-7 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-primary hover:bg-primary/10"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                Edit
-              </button>
-            </div>
+          
+          <div className="flex items-center justify-end gap-1">
+            <button
+              onClick={onMoveUp}
+              disabled={slide.order === 1}
+              title="Move up"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              <ChevronUp className="h-4 w-4" />
+            </button>
+            <button
+              onClick={onMoveDown}
+              disabled={slide.order === totalSlides}
+              title="Move down"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex h-7 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-primary hover:bg-primary/10"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </button>
           </div>
         )}
       </div>

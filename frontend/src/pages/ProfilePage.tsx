@@ -241,7 +241,6 @@ function DeleteAccountSection() {
   );
 }
 
-// ─── Profile Page ───────────────────────────────────────────────────────────
 export function ProfilePage() {
   const { data: profile, isLoading } = useProfile();
   const { user } = useAuth();
@@ -259,7 +258,7 @@ export function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl animate-fade-in">
-      {/* Header */}
+      
       <div className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight">Account settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -267,7 +266,7 @@ export function ProfilePage() {
         </p>
       </div>
 
-      {/* Email (read-only) */}
+     
       <div className="mb-6 flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
           {displayName.charAt(0).toUpperCase()}
@@ -281,7 +280,7 @@ export function ProfilePage() {
         </span>
       </div>
 
-      {/* Sections */}
+      
       <div className="space-y-6">
         <UpdateNameSection currentName={displayName} />
         <ChangePasswordSection />

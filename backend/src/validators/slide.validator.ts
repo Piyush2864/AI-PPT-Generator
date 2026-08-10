@@ -20,7 +20,6 @@ export const reorderSlidesSchema = z.object({
     id: z.string().uuid('Invalid presentation id'),
   }),
   body: z.object({
-    // Array of { slideId, order } pairs — user sends the new desired order
     slides: z
       .array(
         z.object({

@@ -8,7 +8,10 @@ export interface Slide {
   order: number;
   title: string;
   content: string;
-  notes?: string;
+  notes?: string | null;
+  imageUrl?: string | null;
+  imagePhotographerName?: string | null;
+  imagePhotographerUrl?: string | null;
 }
 
 export interface Presentation {
@@ -20,10 +23,11 @@ export interface Presentation {
   theme: PresentationTheme;
   tone: PresentationTone;
   style: PresentationStyle;
-  customInstructions?: string;
+  customInstructions?: string | null;
   status: PresentationStatus;
   failureReason?: string | null;
   pdfUrl?: string | null;
+  jobId?: string | null;
   createdAt: string;
   updatedAt: string;
   slides?: Slide[];

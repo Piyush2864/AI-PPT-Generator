@@ -34,7 +34,7 @@ export function LoginPage() {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      {/* Left: form */}
+      
       <div className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm animate-fade-in">
           <Logo className="mb-10" />
@@ -97,7 +97,7 @@ export function LoginPage() {
         </div>
       </div>
 
-      {/* Right: editorial panel */}
+     
       <div className="relative hidden overflow-hidden bg-foreground lg:block">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(21_90%_48%/0.35),transparent_55%)]" />
         <div className="relative flex h-full flex-col justify-between p-12">

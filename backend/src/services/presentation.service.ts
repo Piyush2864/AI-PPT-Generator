@@ -72,7 +72,6 @@ export class PresentationService {
     if (presentation.pdfUrl) {
       const absolutePath = `${process.cwd()}${presentation.pdfUrl}`;
       fs.promises.unlink(absolutePath).catch(() => {
-        // Non-fatal: file may already be gone. Just log at debug level via service logger.
         logger.debug({ presentationId: id }, 'PDF file already absent during delete cleanup');
       });
     }

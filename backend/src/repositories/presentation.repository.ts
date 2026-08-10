@@ -8,9 +8,6 @@ interface ListParams {
   status?: PresentationStatus;
 }
 
-// Repository layer for Presentation + nested Slide/JobLog records.
-// All raw Prisma queries related to presentations live here, isolated from
-// service-level business logic (status transitions, job orchestration, etc.).
 export class PresentationRepository {
   create(data: Prisma.PresentationCreateInput) {
     return prisma.presentation.create({ data });
@@ -31,7 +28,10 @@ export class PresentationRepository {
   }
 
   async list({ userId, page, limit, status }: ListParams) {
-    const where: Prisma.PresentationWhereInput = { userId, ...(status ? { status } : {}) };
+    const where: Prisma.PresentationWhereInput = {
+      userId,
+      ...(status ? { status } : {}),
+    };
 
     const [items, total] = await Promise.all([
       prisma.presentation.findMany({
@@ -39,6 +39,13 @@ export class PresentationRepository {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
+        include: {
+          slides: {
+            orderBy: { order: 'asc' },
+            take: 1,
+            select: { imageUrl: true, order: true },
+          },
+        },
       }),
       prisma.presentation.count({ where }),
     ]);
@@ -49,7 +56,11 @@ export class PresentationRepository {
   updateStatus(
     id: string,
     status: PresentationStatus,
-    extra: Partial<{ failureReason: string | null; startedAt: Date; completedAt: Date }> = {},
+    extra: Partial<{
+      failureReason: string | null;
+      startedAt: Date;
+      completedAt: Date;
+    }> = {},
   ) {
     return prisma.presentation.update({ where: { id }, data: { status, ...extra } });
   }
@@ -66,11 +77,31 @@ export class PresentationRepository {
     return prisma.presentation.delete({ where: { id } });
   }
 
-  saveSlides(presentationId: string, slides: { order: number; title: string; content: string; notes?: string }[]) {
+  saveSlides(
+    presentationId: string,
+    slides: {
+      order: number;
+      title: string;
+      content: string;
+      notes?: string;
+      imageUrl?: string;
+      imagePhotographerName?: string;
+      imagePhotographerUrl?: string;
+    }[],
+  ) {
     return prisma.$transaction(
       slides.map((slide) =>
         prisma.slide.create({
-          data: { presentationId, ...slide },
+          data: {
+            presentationId,
+            order: slide.order,
+            title: slide.title,
+            content: slide.content,
+            notes: slide.notes,
+            imageUrl: slide.imageUrl,
+            imagePhotographerName: slide.imagePhotographerName,
+            imagePhotographerUrl: slide.imagePhotographerUrl,
+          },
         }),
       ),
     );

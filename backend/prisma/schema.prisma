@@ -1,3 +1,4 @@
+// Prisma schema for AI Presentation Generator SaaS
 
 generator client {
   provider = "prisma-client-js"
@@ -59,7 +60,6 @@ model User {
   @@map("users")
 }
 
-
 model RefreshToken {
   id        String   @id @default(uuid())
   tokenHash String   @unique @map("token_hash")
@@ -74,27 +74,25 @@ model RefreshToken {
 }
 
 model Presentation {
-  id        String             @id @default(uuid())
-  userId    String             @map("user_id")
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  topic       String
-  audience    String
-  language    String             @default("English")
-  slideCount  Int                @map("slide_count")
-  theme       PresentationTheme  @default(MINIMAL)
-  tone        PresentationTone   @default(INFORMATIVE)
-  style       PresentationStyle  @default(PROFESSIONAL)
-  customInstructions String?     @map("custom_instructions") @db.Text
+  topic              String
+  audience           String
+  language           String            @default("English")
+  slideCount         Int               @map("slide_count")
+  theme              PresentationTheme @default(MINIMAL)
+  tone               PresentationTone  @default(INFORMATIVE)
+  style              PresentationStyle @default(PROFESSIONAL)
+  customInstructions String?           @map("custom_instructions") @db.Text
 
   status        PresentationStatus @default(PENDING)
   failureReason String?            @map("failure_reason")
-
-  jobId String? @map("job_id")
-
-  pdfUrl      String? @map("pdf_url")
-  startedAt   DateTime? @map("started_at")
-  completedAt DateTime? @map("completed_at")
+  jobId         String?            @map("job_id")
+  pdfUrl        String?            @map("pdf_url")
+  startedAt     DateTime?          @map("started_at")
+  completedAt   DateTime?          @map("completed_at")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -108,14 +106,20 @@ model Presentation {
 }
 
 model Slide {
-  id             String   @id @default(uuid())
-  presentationId String   @map("presentation_id")
+  id             String       @id @default(uuid())
+  presentationId String       @map("presentation_id")
   presentation   Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
 
-  order   Int
-  title   String
-  content String   @db.Text
-  notes   String?  @db.Text
+  order    Int
+  title    String
+  content  String  @db.Text
+  notes    String? @db.Text
+
+  // Unsplash image URL fetched automatically during generation.
+  // Null if Unsplash is not configured or fetch failed (graceful fallback).
+  imageUrl            String? @map("image_url")
+  imagePhotographerName String? @map("image_photographer_name")
+  imagePhotographerUrl  String? @map("image_photographer_url")
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -123,7 +127,6 @@ model Slide {
   @@unique([presentationId, order])
   @@map("slides")
 }
-
 
 model JobLog {
   id             String       @id @default(uuid())
