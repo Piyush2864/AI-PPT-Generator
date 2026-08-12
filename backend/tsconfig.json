@@ -13,9 +13,6 @@
     "resolveJsonModule": true,
     "declaration": false,
     "sourceMap": true,
-    "paths": {
-      "*": ["./src/*"]
-    },
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
