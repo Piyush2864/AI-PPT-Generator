@@ -2,11 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
-import { logger } from './config/logger';
-import { env } from './config/env';
-import routes from './routes';
-import { errorHandler, notFoundHandler } from './middlewares/errorHandler.middleware';
-import { apiRateLimiter } from './middlewares/rateLimiter.middleware';
+import { logger } from './config/logger.js';
+import { env } from './config/env.js';
+import routes from './routes/index.js';
+import { errorHandler, notFoundHandler } from './middlewares/errorHandler.middleware.js';
+import { apiRateLimiter } from './middlewares/rateLimiter.middleware.js';
 
 export const createApp = () => {
   const app = express();
