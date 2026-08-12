@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
-import { v4 as uuid } from 'uuid';
-import ms from '../utils/ms.js';
+import { randomUUID } from 'crypto';
+import ms from '../utils/ms';
 import { userRepository } from '../repositories/user.repository';
 import { refreshTokenRepository } from '../repositories/refreshToken.repository';
 import { AppError } from '../utils/AppError';
@@ -90,7 +90,7 @@ export class AuthService {
   private async issueTokens(userId: string, email: string): Promise<AuthTokens> {
     const accessToken = signAccessToken({ userId, email });
 
-    const tokenId = uuid();
+    const tokenId = randomUUID();
     const refreshToken = signRefreshToken({ userId, tokenId });
     const expiresAt = new Date(Date.now() + ms(env.JWT_REFRESH_EXPIRES_IN));
 
