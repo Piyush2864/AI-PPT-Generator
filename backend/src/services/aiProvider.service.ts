@@ -52,7 +52,7 @@ export class AIProviderService {
       .replace(/^model\s*:\s*/i, '')
       .replace(/^['"]|['"]$/g, '');
 
-    return cleaned || 'gemini-2.5-flash';
+    return cleaned || 'gemini-1.5-flash';
   }
 
   async generateSlides(params: GeneratePresentationParams): Promise<SlideContent[]> {

@@ -1,5 +1,4 @@
-import IORedis from 'ioredis';
-import { env } from '../config/env';
+import { createRedisInstance } from '../config/redis';
 import { emitPresentationUpdate } from './socket.server';
 import { createChildLogger } from '../config/logger';
 
@@ -17,11 +16,7 @@ export interface PresentationUpdateMessage {
 
 
 export const subscribeToPresentationUpdates = () => {
-  const subscriber = new IORedis({
-    host: env.REDIS_HOST,
-    port: env.REDIS_PORT,
-    password: env.REDIS_PASSWORD || undefined,
-  });
+  const subscriber = createRedisInstance();
 
   subscriber.subscribe(CHANNEL, (err) => {
     if (err) logger.error({ err }, 'Failed to subscribe to presentation updates channel');
@@ -40,11 +35,7 @@ export const subscribeToPresentationUpdates = () => {
   return subscriber;
 };
 
-const publisher = new IORedis({
-  host: env.REDIS_HOST,
-  port: env.REDIS_PORT,
-  password: env.REDIS_PASSWORD || undefined,
-});
+const publisher = createRedisInstance();
 
 export const publishPresentationUpdate = async (message: PresentationUpdateMessage) => {
   await publisher.publish(CHANNEL, JSON.stringify(message));

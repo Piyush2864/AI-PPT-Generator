@@ -10,8 +10,10 @@ let io: SocketIOServer | null = null;
 
 
 export const initSocketServer = (httpServer: HTTPServer): SocketIOServer => {
+  const corsOrigins = env.CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean);
+
   io = new SocketIOServer(httpServer, {
-    cors: { origin: env.CLIENT_URL, credentials: true },
+    cors: { origin: corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins, credentials: true },
   });
 
   io.use((socket: Socket, next) => {

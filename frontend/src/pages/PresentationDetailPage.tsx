@@ -18,6 +18,7 @@ export function PresentationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingPptx, setIsDownloadingPptx] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isDuplicating, setIsDuplicating] = useState(false);
 
@@ -50,12 +51,24 @@ export function PresentationDetailPage() {
     if (!id || !presentation) return;
     setIsDownloading(true);
     try {
-      // Single call — backend generates PDF in memory and streams it
       await presentationApi.downloadPdf(id, presentation.topic);
     } catch {
       toast.error('PDF download failed. Please try again.');
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadPptx = async () => {
+    if (!id || !presentation) return;
+    setIsDownloadingPptx(true);
+    try {
+      await presentationApi.downloadPptx(id, presentation.topic);
+      toast.success('PowerPoint deck exported!');
+    } catch {
+      toast.error('PowerPoint download failed. Please try again.');
+    } finally {
+      setIsDownloadingPptx(false);
     }
   };
 
@@ -139,10 +152,16 @@ export function PresentationDetailPage() {
           )}
 
           {isCompleted && (
-            <Button size="sm" className="gap-1.5" onClick={handleDownload} isLoading={isDownloading}>
-              <Download className="h-4 w-4" />
-              Export PDF
-            </Button>
+            <>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadPptx} isLoading={isDownloadingPptx}>
+                <Download className="h-4 w-4 text-amber-500" />
+                Export PPTX
+              </Button>
+              <Button size="sm" className="gap-1.5" onClick={handleDownload} isLoading={isDownloading}>
+                <Download className="h-4 w-4" />
+                Export PDF
+              </Button>
+            </>
           )}
         </div>
       </div>

@@ -20,11 +20,13 @@ export class SlideRepository {
   }
 
   reorder(updates: { slideId: string; order: number }[]) {
-    return prisma.$transaction(
-      updates.map(({ slideId, order }) =>
-        prisma.slide.update({ where: { id: slideId }, data: { order } })
-      )
+    const tempUpdates = updates.map(({ slideId }, idx) =>
+      prisma.slide.update({ where: { id: slideId }, data: { order: -(idx + 1000) } }),
     );
+    const finalUpdates = updates.map(({ slideId, order }) =>
+      prisma.slide.update({ where: { id: slideId }, data: { order } }),
+    );
+    return prisma.$transaction([...tempUpdates, ...finalUpdates]);
   }
 
   deleteAllByPresentation(presentationId: string) {

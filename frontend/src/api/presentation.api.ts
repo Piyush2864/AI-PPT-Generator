@@ -62,4 +62,22 @@ export const presentationApi = {
     link.remove();
     window.URL.revokeObjectURL(blobUrl);
   },
+
+  downloadPptx: async (id: string, filename: string) => {
+    const response = await axiosClient.get(`/presentations/${id}/download-pptx`, {
+      responseType: 'blob',
+    });
+
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    });
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = `${filename}.pptx`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(blobUrl);
+  },
 };

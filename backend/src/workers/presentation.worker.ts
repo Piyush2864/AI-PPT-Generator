@@ -1,5 +1,5 @@
 import { Worker, Job } from "bullmq";
-import { redisConnection } from "../config/redis";
+import { createRedisInstance } from "../config/redis";
 import {
   QUEUE_NAMES,
   JOB_EVENT_TYPE,
@@ -175,12 +175,7 @@ export const presentationWorker = new Worker<PresentationJobData>(
   QUEUE_NAMES.PRESENTATION_GENERATION,
   processor,
   {
-    connection: {
-      host: env.REDIS_HOST,
-      port: env.REDIS_PORT,
-      password: env.REDIS_PASSWORD || undefined,
-      maxRetriesPerRequest: null,
-    },
+    connection: createRedisInstance() as any,
     concurrency: 5,
   },
 );

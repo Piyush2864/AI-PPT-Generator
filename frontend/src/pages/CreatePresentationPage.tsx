@@ -165,7 +165,7 @@ export function CreatePresentationPage() {
 
         <Card className="p-6">
           <Label className="mb-3">Visual theme</Label>
-          <SegmentedControl options={THEMES} value={theme} onChange={(v) => setTheme(v as PresentationTheme)} columns={4} keyPrefix="theme" />
+          <SegmentedControl options={THEMES} value={theme} onChange={(v) => setTheme(v as PresentationTheme)} columns={5} keyPrefix="theme" />
         </Card>
 
         <Card className="p-6">

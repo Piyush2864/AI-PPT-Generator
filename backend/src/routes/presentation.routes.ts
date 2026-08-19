@@ -17,6 +17,7 @@ import {
   regeneratePresentation,
   duplicatePresentation,
   downloadPdf,
+  downloadPptx,
 } from '../controllers/presentation.controller';
 import { updateSlide, reorderSlides } from '../controllers/slide.controller';
 
@@ -35,6 +36,7 @@ router.post('/:id/duplicate', validate(presentationIdParamSchema), duplicatePres
 
 
 router.get('/:id/download', validate(presentationIdParamSchema), downloadPdf);
+router.get('/:id/download-pptx', validate(presentationIdParamSchema), downloadPptx);
 
 
 router.patch('/:id/slides/reorder', validate(reorderSlidesSchema), reorderSlides);

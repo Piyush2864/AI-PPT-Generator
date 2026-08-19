@@ -72,3 +72,19 @@ export const downloadPdf = asyncHandler(async (req: AuthenticatedRequest, res: R
 
   res.end(buffer);
 });
+
+export const downloadPptx = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { buffer, filename } = await exportService.generatePptxBuffer(
+    req.params.id,
+    req.user!.userId,
+  );
+
+  res.set({
+    'Content-Type': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'Content-Disposition': `attachment; filename="${filename}"`,
+    'Content-Length': buffer.length.toString(),
+    'Cache-Control': 'no-store',
+  });
+
+  res.end(buffer);
+});

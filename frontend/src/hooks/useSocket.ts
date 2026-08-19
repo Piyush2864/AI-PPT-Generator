@@ -6,7 +6,19 @@ import { useAuth } from '../context/AuthContext';
 import { presentationKeys } from './usePresentations';
 import type { Presentation } from '../types/presentation.types';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_SOCKET_URL) return import.meta.env.VITE_SOCKET_URL;
+  if (import.meta.env.VITE_API_BASE_URL) {
+    try {
+      return new URL(import.meta.env.VITE_API_BASE_URL).origin;
+    } catch {
+      // Fallback below
+    }
+  }
+  return 'http://localhost:4000';
+};
+
+const SOCKET_URL = getSocketUrl();
 
 interface PresentationStatusUpdate {
   presentationId: string;

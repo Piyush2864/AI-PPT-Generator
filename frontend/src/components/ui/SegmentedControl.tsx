@@ -10,16 +10,22 @@ interface SegmentedControlProps {
   options: Option[];
   value: string;
   onChange: (value: string) => void;
-  columns?: 2 | 4;
+  columns?: 2 | 4 | 5;
   keyPrefix?: string;
 }
 
-// A tactile pill-grid picker used for small, mutually-exclusive option sets
-// (theme, tone, style). Feels more considered than a plain <select> for choices
-// the user will compare visually before picking.
-export function SegmentedControl({ options, value, onChange, columns = 4, keyPrefix = '' }: SegmentedControlProps) {
+
+export function SegmentedControl({ options, value, onChange, columns, keyPrefix = '' }: SegmentedControlProps) {
+  const effectiveCols = columns ?? options.length;
+  const gridClass =
+    effectiveCols === 5
+      ? 'grid-cols-2 sm:grid-cols-5'
+      : effectiveCols === 4
+      ? 'grid-cols-2 sm:grid-cols-4'
+      : 'grid-cols-2';
+
   return (
-    <div className={cn('grid gap-2', columns === 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2')}>
+    <div className={cn('grid gap-2', gridClass)}>
       {options.map((opt) => {
         const active = opt.value === value;
         return (
