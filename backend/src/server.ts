@@ -5,6 +5,7 @@ import { logger } from './config/logger';
 import { initSocketServer } from './sockets/socket.server';
 import { subscribeToPresentationUpdates } from './sockets/socket.bridge';
 import { prisma } from './config/prisma';
+import './workers/presentation.worker';
 
 const app = createApp();
 const httpServer = http.createServer(app);
