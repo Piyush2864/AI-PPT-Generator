@@ -6,7 +6,7 @@ import {
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { usePresentation } from '../hooks/usePresentations';
-import { useUpdateSlide, useReorderSlides } from '../hooks/useSlides';
+import { useUpdateSlide, useReorderSlides, useAiTransformSlide } from '../hooks/useSlides';
 import { presentationApi } from '../api/presentation.api';
 import { PresentationStatusBadge } from '../components/presentation/PresentationStatusBadge';
 import { SlideEditorCard } from '../components/presentation/SlideEditorCard';
@@ -23,10 +23,12 @@ export function PresentationDetailPage() {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isDuplicating, setIsDuplicating] = useState(false);
   const [isPresenterOpen, setIsPresenterOpen] = useState(false);
+  const [transformingSlideId, setTransformingSlideId] = useState<string | null>(null);
 
   const { data: presentation, isLoading } = usePresentation(id);
   const updateSlide = useUpdateSlide(id ?? '');
   const reorderSlides = useReorderSlides(id ?? '');
+  const aiTransformSlide = useAiTransformSlide(id ?? '');
 
   const isCompleted = presentation?.status === 'COMPLETED';
   const isProcessing = presentation?.status === 'PROCESSING' || presentation?.status === 'PENDING';
@@ -34,6 +36,18 @@ export function PresentationDetailPage() {
 
   const handleSaveSlide = (slideId: string, payload: { title: string; content: string; notes: string }) => {
     updateSlide.mutate({ slideId, payload });
+  };
+
+  const handleAiTransform = (
+    slideId: string,
+    action: 'CONCISE' | 'EXPAND' | 'FORMAL' | 'CASUAL' | 'TRANSLATE' | 'SPEAKER_NOTES',
+    targetLanguage?: string,
+  ) => {
+    setTransformingSlideId(slideId);
+    aiTransformSlide.mutate(
+      { slideId, action, targetLanguage },
+      { onSettled: () => setTransformingSlideId(null) },
+    );
   };
 
   const handleMove = (slide: Slide, direction: 'up' | 'down') => {
@@ -232,7 +246,9 @@ export function PresentationDetailPage() {
                 theme={presentation.theme}
                 totalSlides={slides.length}
                 isSaving={updateSlide.isPending}
+                isAiTransforming={aiTransformSlide.isPending && transformingSlideId === slide.id}
                 onSave={handleSaveSlide}
+                onAiTransform={handleAiTransform}
                 onMoveUp={() => handleMove(slide, 'up')}
                 onMoveDown={() => handleMove(slide, 'down')}
               />

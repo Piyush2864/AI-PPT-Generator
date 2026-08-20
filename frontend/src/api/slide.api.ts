@@ -25,4 +25,17 @@ export const slideApi = {
     );
     return data.data;
   },
+
+  aiTransform: async (
+    presentationId: string,
+    slideId: string,
+    action: 'CONCISE' | 'EXPAND' | 'FORMAL' | 'CASUAL' | 'TRANSLATE' | 'SPEAKER_NOTES',
+    targetLanguage?: string,
+  ) => {
+    const { data } = await axiosClient.post<ApiResponse<Slide>>(
+      `/presentations/${presentationId}/slides/${slideId}/ai-transform`,
+      { action, targetLanguage },
+    );
+    return data.data;
+  },
 };

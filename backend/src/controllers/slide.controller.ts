@@ -15,3 +15,9 @@ export const reorderSlides = asyncHandler(async (req: AuthenticatedRequest, res:
   const slides = await slideService.reorderSlides(id, req.user!.userId, req.body);
   sendSuccess(res, 200, 'Slides reordered successfully', slides);
 });
+
+export const aiTransformSlide = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id, slideId } = req.params;
+  const slide = await slideService.aiTransformSlide(id, slideId, req.user!.userId, req.body);
+  sendSuccess(res, 200, 'Slide AI transformation complete', slide);
+});

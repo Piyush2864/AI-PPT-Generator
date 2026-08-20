@@ -85,3 +85,40 @@ export function useReorderSlides(presentationId: string) {
     },
   });
 }
+
+export function useAiTransformSlide(presentationId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      slideId,
+      action,
+      targetLanguage,
+    }: {
+      slideId: string;
+      action: 'CONCISE' | 'EXPAND' | 'FORMAL' | 'CASUAL' | 'TRANSLATE' | 'SPEAKER_NOTES';
+      targetLanguage?: string;
+    }) => slideApi.aiTransform(presentationId, slideId, action, targetLanguage),
+
+    onSuccess: (updatedSlide) => {
+      queryClient.setQueryData<Presentation | undefined>(
+        presentationKeys.detail(presentationId),
+        (old) => {
+          if (!old?.slides) return old;
+          return {
+            ...old,
+            slides: old.slides.map((s) =>
+              s.id === updatedSlide.id ? { ...s, ...updatedSlide } : s,
+            ),
+          };
+        },
+      );
+      toast.success('Slide transformed by AI!');
+    },
+
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg || 'AI transformation failed');
+    },
+  });
+}

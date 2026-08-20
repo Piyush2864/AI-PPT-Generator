@@ -1,5 +1,18 @@
 import { useState } from 'react';
-import { ChevronUp, ChevronDown, Pencil, X, Check } from 'lucide-react';
+import {
+  ChevronUp,
+  ChevronDown,
+  Pencil,
+  X,
+  Check,
+  Sparkles,
+  Zap,
+  Maximize2,
+  Briefcase,
+  Mic,
+  Globe,
+  Loader2,
+} from 'lucide-react';
 import type { Slide } from '../../types/presentation.types';
 import { Button } from '../ui/Button';
 import { Label } from '../ui/Label';
@@ -14,12 +27,20 @@ const themeConfig: Record<string, { bg: string; text: string; accent: string; mu
   ACADEMIC:  { bg: 'bg-white',      text: 'text-zinc-900',  accent: 'bg-emerald-600', muted: 'text-zinc-400' },
 };
 
+const TRANSLATE_LANGUAGES = ['Spanish', 'French', 'German', 'Hindi', 'English'];
+
 interface SlideEditorCardProps {
   slide: Slide;
   theme?: string;
   totalSlides: number;
   isSaving: boolean;
+  isAiTransforming?: boolean;
   onSave: (slideId: string, payload: { title: string; content: string; notes: string }) => void;
+  onAiTransform?: (
+    slideId: string,
+    action: 'CONCISE' | 'EXPAND' | 'FORMAL' | 'CASUAL' | 'TRANSLATE' | 'SPEAKER_NOTES',
+    targetLanguage?: string,
+  ) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
 }
@@ -29,11 +50,14 @@ export function SlideEditorCard({
   theme = 'MINIMAL',
   totalSlides,
   isSaving,
+  isAiTransforming = false,
   onSave,
+  onAiTransform,
   onMoveUp,
   onMoveDown,
 }: SlideEditorCardProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [showTranslateMenu, setShowTranslateMenu] = useState(false);
   const [title, setTitle] = useState(slide.title);
   const [content, setContent] = useState(slide.content);
   const [notes, setNotes] = useState(slide.notes ?? '');
@@ -54,13 +78,29 @@ export function SlideEditorCard({
     setIsEditing(false);
   };
 
+  const triggerAi = (
+    action: 'CONCISE' | 'EXPAND' | 'FORMAL' | 'CASUAL' | 'TRANSLATE' | 'SPEAKER_NOTES',
+    targetLanguage?: string,
+  ) => {
+    setShowTranslateMenu(false);
+    onAiTransform?.(slide.id, action, targetLanguage);
+  };
+
   return (
     <div
       className={cn(
-        'rounded-xl border border-border overflow-hidden shadow-card',
+        'rounded-xl border border-border overflow-hidden shadow-card transition-all relative',
         isEditing && 'ring-2 ring-primary/30',
       )}
     >
+      
+      {isAiTransforming && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <p className="mt-2 text-xs font-semibold text-primary">AI transforming slide…</p>
+        </div>
+      )}
+
       <div className={cn('relative', cfg.bg)}>
         <div className={cn('h-1.5 w-full', cfg.accent)} />
 
@@ -131,6 +171,79 @@ export function SlideEditorCard({
           </div>
         )}
       </div>
+
+      
+      {!isEditing && onAiTransform && (
+        <div className="border-t border-border/50 bg-muted/30 px-3 py-1.5 flex items-center justify-between gap-1 overflow-x-auto text-[11px]">
+          <span className="flex items-center gap-1 font-semibold text-primary/80 shrink-0">
+            <Sparkles className="h-3 w-3" />
+            AI Assistant:
+          </span>
+
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => triggerAi('CONCISE')}
+              className="flex items-center gap-1 rounded px-2 py-0.5 font-medium text-muted-foreground hover:bg-background hover:text-foreground border border-transparent hover:border-border transition-colors"
+              title="Shorten and condense slide content"
+            >
+              <Zap className="h-3 w-3 text-amber-500" />
+              Concise
+            </button>
+
+            <button
+              onClick={() => triggerAi('EXPAND')}
+              className="flex items-center gap-1 rounded px-2 py-0.5 font-medium text-muted-foreground hover:bg-background hover:text-foreground border border-transparent hover:border-border transition-colors"
+              title="Expand with more detail and insights"
+            >
+              <Maximize2 className="h-3 w-3 text-blue-500" />
+              Expand
+            </button>
+
+            <button
+              onClick={() => triggerAi('FORMAL')}
+              className="flex items-center gap-1 rounded px-2 py-0.5 font-medium text-muted-foreground hover:bg-background hover:text-foreground border border-transparent hover:border-border transition-colors"
+              title="Rewrite in formal executive tone"
+            >
+              <Briefcase className="h-3 w-3 text-purple-500" />
+              Formal
+            </button>
+
+            <button
+              onClick={() => triggerAi('SPEAKER_NOTES')}
+              className="flex items-center gap-1 rounded px-2 py-0.5 font-medium text-muted-foreground hover:bg-background hover:text-foreground border border-transparent hover:border-border transition-colors"
+              title="Generate presenter speaker notes"
+            >
+              <Mic className="h-3 w-3 text-emerald-500" />
+              Notes
+            </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setShowTranslateMenu((v) => !v)}
+                className="flex items-center gap-1 rounded px-2 py-0.5 font-medium text-muted-foreground hover:bg-background hover:text-foreground border border-transparent hover:border-border transition-colors"
+                title="Translate slide"
+              >
+                <Globe className="h-3 w-3 text-teal-500" />
+                Translate
+              </button>
+
+              {showTranslateMenu && (
+                <div className="absolute right-0 bottom-full mb-1 z-30 w-28 rounded-md border border-border bg-popover py-1 shadow-lg text-popover-foreground animate-fade-in">
+                  {TRANSLATE_LANGUAGES.map((lang) => (
+                    <button
+                      key={lang}
+                      onClick={() => triggerAi('TRANSLATE', lang)}
+                      className="w-full px-3 py-1 text-left text-xs hover:bg-muted font-medium"
+                    >
+                      {lang}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       
       <div className="border-t border-border bg-card px-4 py-2.5">

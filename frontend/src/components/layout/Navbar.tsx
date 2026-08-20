@@ -2,6 +2,7 @@ import { LogOut, Plus, UserCog } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Logo } from './Logo';
 import { Button } from '../ui/Button';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import { useAuth } from '../../context/AuthContext';
 import { cn } from '../../lib/utils';
 
@@ -52,7 +53,8 @@ export function Navbar() {
           </Link>
 
           <div className="flex items-center gap-1 pl-2">
-           
+            <ThemeToggle />
+
             <Link
               to="/profile"
               className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
@@ -61,7 +63,6 @@ export function Navbar() {
               {initials}
             </Link>
 
-            
             <Link
               to="/profile"
               className={cn(
@@ -73,7 +74,6 @@ export function Navbar() {
               <UserCog className="h-4 w-4" />
             </Link>
 
-            
             <button
               onClick={handleLogout}
               className="hidden h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:flex"

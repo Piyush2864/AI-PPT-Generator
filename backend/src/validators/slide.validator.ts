@@ -31,5 +31,17 @@ export const reorderSlidesSchema = z.object({
   }),
 });
 
+export const aiTransformSlideSchema = z.object({
+  params: z.object({
+    id: z.string().uuid('Invalid presentation id'),
+    slideId: z.string().uuid('Invalid slide id'),
+  }),
+  body: z.object({
+    action: z.enum(['CONCISE', 'EXPAND', 'FORMAL', 'CASUAL', 'TRANSLATE', 'SPEAKER_NOTES']),
+    targetLanguage: z.string().min(2).max(50).optional(),
+  }),
+});
+
 export type UpdateSlideInput = z.infer<typeof updateSlideSchema>['body'];
 export type ReorderSlidesInput = z.infer<typeof reorderSlidesSchema>['body'];
+export type AiTransformSlideInput = z.infer<typeof aiTransformSlideSchema>['body'];

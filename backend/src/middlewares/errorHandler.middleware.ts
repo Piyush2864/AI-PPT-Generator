@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
 import { AppError } from '../utils/AppError';
+import { AIProviderError } from '../services/aiProvider.service';
 import { createChildLogger } from '../config/logger';
 
 const logger = createChildLogger('errorHandler');
@@ -20,6 +21,14 @@ export const errorHandler = (
       success: false,
       message: err.message,
       errors: err.details,
+    });
+  }
+
+  if (err instanceof AIProviderError) {
+    logger.warn({ path: req.path }, err.message);
+    return res.status(400).json({
+      success: false,
+      message: err.message,
     });
   }
 

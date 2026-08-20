@@ -1,8 +1,9 @@
 import { slideRepository } from '../repositories/slide.repository';
 import { presentationRepository } from '../repositories/presentation.repository';
+import { aiProviderService, AIProviderError } from './aiProvider.service';
 import { AppError } from '../utils/AppError';
 import { createChildLogger } from '../config/logger';
-import type { UpdateSlideInput, ReorderSlidesInput } from '../validators/slide.validator';
+import type { UpdateSlideInput, ReorderSlidesInput, AiTransformSlideInput } from '../validators/slide.validator';
 
 const logger = createChildLogger('slide-service');
 
@@ -35,6 +36,40 @@ export class SlideService {
     });
 
     logger.info({ presentationId, slideId, userId }, 'Slide updated');
+    return updated;
+  }
+
+  async aiTransformSlide(
+    presentationId: string,
+    slideId: string,
+    userId: string,
+    input: AiTransformSlideInput,
+  ) {
+    const { slide } = await this.assertOwnership(presentationId, userId, slideId);
+
+    let transformed;
+    try {
+      transformed = await aiProviderService.transformSlide({
+        action: input.action,
+        slideTitle: slide!.title,
+        slideContent: slide!.content,
+        slideNotes: slide!.notes,
+        targetLanguage: input.targetLanguage,
+      });
+    } catch (err) {
+      if (err instanceof AIProviderError) {
+        throw AppError.badRequest(`AI transformation error: ${err.message}`);
+      }
+      throw err;
+    }
+
+    const updated = await slideRepository.updateById(slideId, {
+      title: transformed.title,
+      content: transformed.content,
+      notes: transformed.notes,
+    });
+
+    logger.info({ presentationId, slideId, userId, action: input.action }, 'Slide AI transformed');
     return updated;
   }
 

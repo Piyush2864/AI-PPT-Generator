@@ -7,7 +7,7 @@ import {
   presentationIdParamSchema,
   listPresentationsQuerySchema,
 } from '../validators/presentation.validator';
-import { updateSlideSchema, reorderSlidesSchema } from '../validators/slide.validator';
+import { updateSlideSchema, reorderSlidesSchema, aiTransformSlideSchema } from '../validators/slide.validator';
 import {
   createPresentation,
   listPresentations,
@@ -19,7 +19,7 @@ import {
   downloadPdf,
   downloadPptx,
 } from '../controllers/presentation.controller';
-import { updateSlide, reorderSlides } from '../controllers/slide.controller';
+import { updateSlide, reorderSlides, aiTransformSlide } from '../controllers/slide.controller';
 
 const router = Router();
 
@@ -41,5 +41,6 @@ router.get('/:id/download-pptx', validate(presentationIdParamSchema), downloadPp
 
 router.patch('/:id/slides/reorder', validate(reorderSlidesSchema), reorderSlides);
 router.patch('/:id/slides/:slideId', validate(updateSlideSchema), updateSlide);
+router.post('/:id/slides/:slideId/ai-transform', validate(aiTransformSlideSchema), aiTransformSlide);
 
 export default router;

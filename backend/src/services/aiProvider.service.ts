@@ -40,6 +40,20 @@ export class AIProviderError extends Error {
 }
 
 
+export interface TransformSlideParams {
+  action: 'CONCISE' | 'EXPAND' | 'FORMAL' | 'CASUAL' | 'TRANSLATE' | 'SPEAKER_NOTES';
+  slideTitle: string;
+  slideContent: string;
+  slideNotes?: string | null;
+  targetLanguage?: string;
+}
+
+export interface TransformSlideResult {
+  title: string;
+  content: string;
+  notes?: string;
+}
+
 export class AIProviderService {
   private apiKey = env.AI_PROVIDER_API_KEY ;
   private model = this.normalizeModel(env.AI_PROVIDER_MODEL);
@@ -55,10 +69,160 @@ export class AIProviderService {
     return cleaned || 'gemini-1.5-flash';
   }
 
+  private hasValidApiKey(): boolean {
+    if (!this.apiKey) return false;
+    const k = this.apiKey.trim();
+    return k.length > 5 && k !== 'your-api-key' && !k.startsWith('<') && !k.startsWith('YOUR_');
+  }
+
+  private parseJsonResponse(text: string): any {
+    const cleaned = text
+      .trim()
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
+    return JSON.parse(cleaned);
+  }
+
+  async transformSlide(params: TransformSlideParams): Promise<TransformSlideResult> {
+    if (!this.hasValidApiKey()) {
+      logger.warn('Valid AI_PROVIDER_API_KEY not set - using mock slide transformer');
+      return this.mockTransform(params);
+    }
+
+    const prompt = this.buildTransformPrompt(params);
+    const url = `${this.baseUrl}/${this.model}:generateContent?key=${this.apiKey}`;
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            responseMimeType: 'application/json',
+          },
+        }),
+      });
+    } catch (err) {
+      throw new AIProviderError(`Network error calling Gemini API: ${(err as Error).message}`, true);
+    }
+
+    if (response.status === 429) {
+      throw new AIProviderError('Gemini API rate limit exceeded', true);
+    }
+    if (response.status >= 500) {
+      throw new AIProviderError(`Gemini API temporary failure (${response.status})`, true);
+    }
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      throw new AIProviderError(`Gemini API request failed (${response.status}): ${body}`, false);
+    }
+
+    const json = (await response.json()) as GeminiApiResponse;
+    const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!text) {
+      throw new AIProviderError('Gemini API returned an empty response', true);
+    }
+
+    try {
+      const parsed = this.parseJsonResponse(text);
+      return {
+        title: parsed.title || params.slideTitle,
+        content: parsed.content || params.slideContent,
+        notes: parsed.notes ?? params.slideNotes ?? undefined,
+      };
+    } catch {
+      throw new AIProviderError('Failed to parse Gemini transform response as JSON', false);
+    }
+  }
+
+  private buildTransformPrompt(params: TransformSlideParams): string {
+    let instruction = '';
+    switch (params.action) {
+      case 'CONCISE':
+        instruction = 'Make the title and content concise, punchy, and bullet-pointed.';
+        break;
+      case 'EXPAND':
+        instruction = 'Expand the content with additional valuable insights, context, and examples.';
+        break;
+      case 'FORMAL':
+        instruction = 'Rewrite the title and content using formal, executive business language.';
+        break;
+      case 'CASUAL':
+        instruction = 'Rewrite the title and content using an engaging, conversational tone.';
+        break;
+      case 'TRANSLATE':
+        instruction = `Translate the title, content, and notes into ${params.targetLanguage || 'English'}.`;
+        break;
+      case 'SPEAKER_NOTES':
+        instruction = 'Generate detailed speaker notes elaborating on key points for a live presenter.';
+        break;
+    }
+
+    return `You are an expert slide editor. Modify the following slide according to this instruction: "${instruction}"
+
+Original Title: "${params.slideTitle}"
+Original Content:
+"${params.slideContent}"
+Original Notes: "${params.slideNotes || ''}"
+
+Respond ONLY with strict JSON in this exact format:
+{
+  "title": "Updated Title",
+  "content": "Updated content paragraphs or bullet points",
+  "notes": "Updated speaker notes"
+}`;
+  }
+
+  private async mockTransform(params: TransformSlideParams): Promise<TransformSlideResult> {
+    await new Promise((r) => setTimeout(r, 800));
+
+    switch (params.action) {
+      case 'CONCISE':
+        return {
+          title: params.slideTitle,
+          content: params.slideContent
+            .split('\n')
+            .map((line) => line.replace(/^[•\-]\s*/, ''))
+            .slice(0, 2)
+            .map((line) => `• ${line.slice(0, 80)}`)
+            .join('\n'),
+          notes: params.slideNotes ?? undefined,
+        };
+      case 'EXPAND':
+        return {
+          title: params.slideTitle,
+          content: `${params.slideContent}\n• Added strategic detail expanding on market trends.\n• Additional analytical overview included.`,
+          notes: params.slideNotes ?? undefined,
+        };
+      case 'TRANSLATE':
+        return {
+          title: `[${params.targetLanguage || 'Translated'}] ${params.slideTitle}`,
+          content: `${params.slideContent}`,
+          notes: params.slideNotes ? `[${params.targetLanguage || 'Translated'}] ${params.slideNotes}` : undefined,
+        };
+      case 'SPEAKER_NOTES':
+        return {
+          title: params.slideTitle,
+          content: params.slideContent,
+          notes: `Speaker script: Welcome team. On this slide about "${params.slideTitle}", emphasize our core strategy and highlight key metrics.`,
+        };
+      default:
+        return {
+          title: params.slideTitle,
+          content: params.slideContent,
+          notes: params.slideNotes ?? undefined,
+        };
+    }
+  }
+
   async generateSlides(params: GeneratePresentationParams): Promise<SlideContent[]> {
-   
-    if (!this.apiKey) {
-      logger.warn('AI_PROVIDER_API_KEY not set - using mock slide generator');
+    if (!this.hasValidApiKey()) {
+      logger.warn('Valid AI_PROVIDER_API_KEY not set - using mock slide generator');
       return this.mockGenerate(params);
     }
 
@@ -101,7 +265,7 @@ export class AIProviderService {
     }
 
     try {
-      const parsed = JSON.parse(text);
+      const parsed = this.parseJsonResponse(text);
       const slides = parsed.slides as SlideContent[];
       if (!Array.isArray(slides) || slides.length === 0) {
         throw new Error('No slides array in response');
