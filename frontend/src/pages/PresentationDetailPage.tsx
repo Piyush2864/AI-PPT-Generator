@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Download, Layers, Languages,
-  Mic2, Palette, ListChecks, Loader2, RefreshCw, Copy, Pencil,
+  Mic2, Palette, ListChecks, Loader2, RefreshCw, Copy, Pencil, Play,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
@@ -10,6 +10,7 @@ import { useUpdateSlide, useReorderSlides } from '../hooks/useSlides';
 import { presentationApi } from '../api/presentation.api';
 import { PresentationStatusBadge } from '../components/presentation/PresentationStatusBadge';
 import { SlideEditorCard } from '../components/presentation/SlideEditorCard';
+import { PresenterModal } from '../components/presentation/PresenterModal';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import type { Slide } from '../types/presentation.types';
@@ -21,6 +22,7 @@ export function PresentationDetailPage() {
   const [isDownloadingPptx, setIsDownloadingPptx] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isDuplicating, setIsDuplicating] = useState(false);
+  const [isPresenterOpen, setIsPresenterOpen] = useState(false);
 
   const { data: presentation, isLoading } = usePresentation(id);
   const updateSlide = useUpdateSlide(id ?? '');
@@ -153,11 +155,15 @@ export function PresentationDetailPage() {
 
           {isCompleted && (
             <>
+              <Button size="sm" className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setIsPresenterOpen(true)}>
+                <Play className="h-4 w-4 fill-current" />
+                Present
+              </Button>
               <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadPptx} isLoading={isDownloadingPptx}>
                 <Download className="h-4 w-4 text-amber-500" />
                 Export PPTX
               </Button>
-              <Button size="sm" className="gap-1.5" onClick={handleDownload} isLoading={isDownloading}>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownload} isLoading={isDownloading}>
                 <Download className="h-4 w-4" />
                 Export PDF
               </Button>
@@ -242,6 +248,14 @@ export function PresentationDetailPage() {
           </div>
         )}
       </div>
+
+      <PresenterModal
+        isOpen={isPresenterOpen}
+        onClose={() => setIsPresenterOpen(false)}
+        presentationTitle={presentation.topic}
+        slides={slides}
+        theme={presentation.theme}
+      />
     </div>
   );
 }
